@@ -27,8 +27,18 @@ function _auto_setup($koneksi): void {
     }
     $cek = mysqli_query($koneksi, "SELECT COUNT(*) as total FROM users");
     if ($cek && (int)mysqli_fetch_assoc($cek)['total'] === 0) {
-        foreach ([['Nadya Aulia','admin@gmail.com','admin'],['Budi Santoso','staff@gmail.com','staff']] as [$n,$e,$r]) {
-            $h = mysqli_real_escape_string($koneksi, password_hash('admin123', PASSWORD_BCRYPT));
+        $adminEmail = env('INITIAL_ADMIN_EMAIL', 'admin@gmail.com');
+        $adminPass  = env('INITIAL_ADMIN_PASSWORD', 'admin123');
+        $staffEmail = env('INITIAL_STAFF_EMAIL', 'staff@gmail.com');
+        $staffPass  = env('INITIAL_STAFF_PASSWORD', 'admin123');
+
+        $initialAccounts = [
+            ['Nadya Aulia',  $adminEmail, password_hash($adminPass, PASSWORD_BCRYPT), 'admin'],
+            ['Budi Santoso', $staffEmail, password_hash($staffPass, PASSWORD_BCRYPT), 'staff'],
+        ];
+
+        foreach ($initialAccounts as [$n, $e, $h, $r]) {
+            $h = mysqli_real_escape_string($koneksi, $h);
             $n = mysqli_real_escape_string($koneksi, $n);
             $e = mysqli_real_escape_string($koneksi, $e);
             mysqli_query($koneksi, "INSERT IGNORE INTO users (nama,email,password,role) VALUES ('$n','$e','$h','$r')");

@@ -130,38 +130,46 @@ tehkitta-ikm/
    - Buat basis data baru bernama `ptrafikamandiri`.
    - Pilih tab **Import**, arahkan ke berkas `ptrafikamandiri.sql` yang tersedia di direktori proyek, lalu jalankan impor.
 
-3. **Konfigurasi Koneksi Basis Data**
-   Periksa berkas `koneksi.php` pada direktori root dan sesuaikan kredensial server lokal jika berbeda dari konfigurasi bawaan:
-   ```php
-   $host = "localhost";
-   $user = "root";
-   $pass = "";
-   $db   = "ptrafikamandiri";
+3. **Konfigurasi Lingkungan (.env)**
+   Salin berkas template lingkungan `.env.example` menjadi `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+   Sesuaikan parameter koneksi basis data dan kredensial inisial pada berkas `.env`:
+   ```env
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USER=root
+   DB_PASS=
+   DB_NAME=ptrafikamandiri
+
+   INITIAL_ADMIN_EMAIL=admin@gmail.com
+   INITIAL_ADMIN_PASSWORD=ganti_dengan_password_anda
+   INITIAL_STAFF_EMAIL=staff@gmail.com
+   INITIAL_STAFF_PASSWORD=ganti_dengan_password_anda
+   SHOW_DEMO_CREDENTIALS=false
    ```
 
 4. **Inisialisasi Pengguna Awal**
-   Buka peramban web dan jalankan skrip seeder untuk memastikan struktur tabel pengguna dan akun default terpasang:
+   Buka peramban web dan jalankan skrip seeder untuk membuat struktur tabel dan akun pengguna sesuai konfigurasi `.env`:
    ```
    http://localhost/tehkitta-ikm/auth/seeder.php
    ```
 
 ---
 
-## Akun Pengguna Default
+## Manajemen Kredensial & Autentikasi
 
-Setelah inisialisasi seeder selesai, akun bawaan yang dapat digunakan meliputi:
-
-| Peran (Role) | Alamat Email | Kata Sandi |
-|---|---|---|
-| Administrator | `admin@gmail.com` | `admin123` |
-| Staff Kasir | `staff@gmail.com` | `admin123` |
+- Seluruh kata sandi pengguna dienkripsi satu arah menggunakan algoritma **Bcrypt** (`PASSWORD_BCRYPT`).
+- Kredensial akun awal dikonfigurasi melalui variabel lingkungan (`.env`) dan tidak disimpan dalam bentuk teks biasa (*plain text*) di dalam repositori publik.
+- Fitur bantuan demo pada halaman login dikendalikan oleh variabel `SHOW_DEMO_CREDENTIALS` (secara default bernilai `false` untuk keamanan).
 
 ---
 
 ## Catatan Keamanan
 
-- **Berkas Seeder**: Setelah instalasi pada lingkungan produksi atau pengujian selesai, segera hapus atau batasi akses berkas `auth/seeder.php` untuk mencegah inisialisasi ulang yang tidak diinginkan.
-- **Kredensial Server**: Selalu ubah kata sandi akun default sebelum menerapkan aplikasi pada lingkungan publik.
+- **Berkas Lingkungan (.env)**: Berkas `.env` telah didaftarkan ke `.gitignore` sehingga tidak akan terunggah ke repositori Git. Jangan pernah mempublikasikan berkas ini.
+- **Berkas Seeder**: Setelah instalasi pada lingkungan produksi selesai, segera hapus atau batasi akses berkas `auth/seeder.php` untuk mencegah inisialisasi ulang yang tidak diinginkan.
 - **Konfigurasi Produksi**: Matikan pelaporan kesalahan PHP terperinci (*display_errors = Off*) pada server produksi guna mencegah kebocoran informasi internal sistem.
 
 ---

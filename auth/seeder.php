@@ -26,10 +26,15 @@ if (mysqli_query($koneksi, $sql_create)) {
     $log[] = ['err', 'Gagal buat tabel: ' . mysqli_error($koneksi)];
 }
 
-// 2. Akun dummy
+$adminEmail = env('INITIAL_ADMIN_EMAIL', 'admin@gmail.com');
+$adminPass  = env('INITIAL_ADMIN_PASSWORD', 'admin123');
+$staffEmail = env('INITIAL_STAFF_EMAIL', 'staff@gmail.com');
+$staffPass  = env('INITIAL_STAFF_PASSWORD', 'admin123');
+
+// 2. Akun Inisial (dikonfigurasi melalui .env)
 $accounts = [
-    ['Nadya Aulia',  'admin@gmail.com',  'admin123', 'admin'],
-    ['Budi Santoso', 'staff@gmail.com',  'admin123', 'staff'],
+    ['Nadya Aulia',  $adminEmail,  $adminPass, 'admin'],
+    ['Budi Santoso', $staffEmail,  $staffPass, 'staff'],
 ];
 
 foreach ($accounts as $acc) {
@@ -59,16 +64,16 @@ foreach ($accounts as $acc) {
 
 // 3. Verifikasi password bisa dipakai
 $verify_ok = false;
-$res = mysqli_query($koneksi, "SELECT password FROM users WHERE email='admin@gmail.com' LIMIT 1");
+$res = mysqli_query($koneksi, "SELECT password FROM users WHERE email='" . mysqli_real_escape_string($koneksi, $adminEmail) . "' LIMIT 1");
 if ($res && $row = mysqli_fetch_assoc($res)) {
-    $verify_ok = password_verify('admin123', $row['password']);
+    $verify_ok = password_verify($adminPass, $row['password']);
 }
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Seeder — TehKitta</title>
+<title>Seeder — Teh Kitta</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -94,8 +99,8 @@ h2{font-size:1.3rem;color:#1a2130;margin-bottom:4px}
 </head>
 <body>
 <div class="card">
-  <h2>🌱 Seeder TehKitta</h2>
-  <p class="sub">Membuat tabel <code>users</code> dan akun dummy</p>
+  <h2>Inisialisasi Basis Data & Akun</h2>
+  <p class="sub">Membuat tabel <code>users</code> dan akun awal sistem</p>
 
   <div class="log">
     <?php foreach ($log as [$type, $msg]): ?>
@@ -105,21 +110,21 @@ h2{font-size:1.3rem;color:#1a2130;margin-bottom:4px}
 
   <div class="verify <?= $verify_ok ? 'ok' : 'err' ?>">
     <?= $verify_ok
-      ? '✅ Verifikasi password <b>admin123</b> → <b>BERHASIL</b>. Login siap digunakan!'
-      : '❌ Verifikasi password gagal. Coba hapus akun lama di tabel users dan jalankan seeder lagi.' ?>
+      ? 'Verifikasi enkripsi password berhasil. Akun siap digunakan.'
+      : 'Verifikasi enkripsi password gagal. Periksa konfigurasi tabel users.' ?>
   </div>
 
   <div class="accounts">
-    <h4>🔑 Akun yang Tersedia</h4>
-    <div class="row"><span class="label">Admin Email</span><span class="val">admin@gmail.com</span></div>
-    <div class="row"><span class="label">Staff Email</span><span class="val">staff@gmail.com</span></div>
-    <div class="row"><span class="label">Password</span><span class="val">admin123</span></div>
+    <h4>Akun Terdaftar (Sesuai Konfigurasi .env)</h4>
+    <div class="row"><span class="label">Admin Email</span><span class="val"><?= htmlspecialchars($adminEmail) ?></span></div>
+    <div class="row"><span class="label">Staff Email</span><span class="val"><?= htmlspecialchars($staffEmail) ?></span></div>
+    <div class="row"><span class="label">Status Password</span><span class="val">Tersimpan dalam bentuk Hash Bcrypt</span></div>
   </div>
 
-  <a href="../auth/login.php" class="btn">→ Pergi ke Halaman Login</a>
+  <a href="../auth/login.php" class="btn">Pergi ke Halaman Login</a>
 
   <div class="warn">
-    ⚠️ <b>PENTING:</b> Setelah login berhasil, <b>hapus file seeder.php</b> ini dari server untuk keamanan.
+    <b>PENTING:</b> Demi keamanan, setelah login berhasil, <b>hapus file seeder.php</b> ini dari server.
   </div>
 </div>
 </body>

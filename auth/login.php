@@ -8,6 +8,12 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+require_once '../koneksi.php';
+
+$showDemo  = (bool) env('SHOW_DEMO_CREDENTIALS', false);
+$demoEmail = env('INITIAL_ADMIN_EMAIL', 'admin@gmail.com');
+$demoPass  = env('INITIAL_ADMIN_PASSWORD', 'admin123');
+
 // Jika sudah login, langsung ke dashboard
 if (!empty($_SESSION['user_id'])) {
     header('Location: ../dashboard/index.php');
@@ -625,6 +631,7 @@ html, body {
         </button>
       </form>
 
+      <?php if ($showDemo): ?>
       <div class="divider">
         <div class="divider-line"></div>
         <span class="divider-text">Akun Demo</span>
@@ -643,11 +650,11 @@ html, body {
         </div>
         <div class="demo-account">
           <span>Email</span>
-          <span class="demo-val" onclick="fillDemo('email')" style="cursor:pointer;" title="Klik untuk isi otomatis">admin@gmail.com</span>
+          <span class="demo-val" onclick="fillDemo('email')" style="cursor:pointer;" title="Klik untuk isi otomatis"><?= htmlspecialchars($demoEmail) ?></span>
         </div>
         <div class="demo-account">
           <span>Password</span>
-          <span class="demo-val" onclick="fillDemo('password')" style="cursor:pointer;" title="Klik untuk isi otomatis">admin123</span>
+          <span class="demo-val" onclick="fillDemo('password')" style="cursor:pointer;" title="Klik untuk isi otomatis"><?= htmlspecialchars($demoPass) ?></span>
         </div>
         <div style="margin-top:10px;">
           <button type="button" onclick="fillDemo('all')" style="width:100%;padding:8px;background:var(--green-500);color:#fff;border:none;border-radius:7px;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;transition:background 0.2s;display:flex;align-items:center;justify-content:center;gap:7px;" onmouseover="this.style.background='#228234'" onmouseout="this.style.background='#2da042'">
@@ -655,6 +662,7 @@ html, body {
           </button>
         </div>
       </div>
+      <?php endif; ?>
 
       <p class="form-footer">
         © <?= date('Y') ?> Teh Kitta · Sistem Manajemen Penjualan Mitra
@@ -677,19 +685,21 @@ function togglePassword() {
     : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
 }
 
+<?php if ($showDemo): ?>
 // Fill demo credentials
 function fillDemo(field) {
   if (field === 'email' || field === 'all') {
-    document.getElementById('email').value    = 'admin@gmail.com';
+    document.getElementById('email').value    = <?= json_encode($demoEmail) ?>;
   }
   if (field === 'password' || field === 'all') {
-    document.getElementById('password').value = 'admin123';
+    document.getElementById('password').value = <?= json_encode($demoPass) ?>;
   }
   if (field === 'all') {
     document.getElementById('loginForm').submit();
     document.getElementById('loginBtn').classList.add('loading');
   }
 }
+<?php endif; ?>
 
 // Loading state on submit
 document.getElementById('loginForm').addEventListener('submit', function(e) {
