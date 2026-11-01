@@ -1,0 +1,71 @@
+<?php
+require_once '../auth/middleware.php';
+require_once '../koneksi.php';
+$tgl_awal  = $_GET['tgl_awal']  ?? date('Y-m-01');
+$tgl_akhir = $_GET['tgl_akhir'] ?? date('Y-m-d');
+$ta = mysqli_real_escape_string($koneksi,$tgl_awal);
+$tb = mysqli_real_escape_string($koneksi,$tgl_akhir);
+$where = "WHERE p.tanggal BETWEEN '$ta' AND '$tb'";
+$summary = mysqli_fetch_assoc(mysqli_query($koneksi,"SELECT COUNT(*) as total_trx, SUM(sub_total) as total_beli FROM pembelian p $where"));
+$rows = mysqli_query($koneksi,"SELECT p.*, s.nama_supplier, pt.nama_petugas FROM pembelian p LEFT JOIN supplier s ON p.id_supplier=s.id_supplier LEFT JOIN petugas pt ON p.id_petugas=pt.id_petugas $where ORDER BY p.tanggal ASC");
+?><!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><title>Laporan Pembelian</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Plus Jakarta Sans',sans-serif;background:#fffbeb;padding:20px;}
+.wrap{max-width:800px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.1);overflow:hidden;}
+.rpt-hdr{background:linear-gradient(135deg,#92400e,#d97706);color:#fff;padding:28px 36px;}
+.rpt-title{font-size:1.2rem;font-weight:800;margin-bottom:4px;}
+.rpt-period{font-size:.8rem;opacity:.8;}
+.rpt-body{padding:24px 36px;}
+.sum-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.sum-box{background:#fffbeb;border-radius:10px;padding:14px 16px;text-align:center;}
+.sum-val{font-size:1.1rem;font-weight:800;color:#d97706;}
+.sum-lbl{font-size:.72rem;color:#8b96a5;margin-top:3px;}
+table{width:100%;border-collapse:collapse;margin-bottom:20px;}
+th{font-size:.72rem;font-weight:700;color:#8b96a5;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;border-bottom:2px solid #fffbeb;text-align:left;}
+th:last-child{text-align:right;}
+td{padding:10px 12px;border-bottom:1px solid #fffde7;font-size:.82rem;color:#2a3341;}
+td:last-child{text-align:right;font-weight:700;color:#d97706;}
+.tfoot-row td{font-weight:800;background:#fffbeb;font-size:.9rem;color:#92400e;}
+.footer-note{font-size:.72rem;color:#b8c0cc;text-align:center;border-top:1px solid #fffbeb;padding-top:16px;}
+@media print{body{background:#fff;padding:0;}.wrap{box-shadow:none;border-radius:0;}.noprint{display:none!important;}}
+.pb{display:flex;gap:10px;justify-content:center;margin-bottom:16px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem;font-weight:700;cursor:pointer;text-decoration:none;border:none;}
+.bg{background:#d97706;color:#fff;}.bo{background:#fff;color:#2a3341;border:1.5px solid #d8dde3;}
+</style></head><body>
+<div class="noprint pb">
+  <button onclick="window.print()" class="btn bg">🖨 Print Laporan</button>
+  <a href="pembelian.php?tgl_awal=<?=urlencode($tgl_awal)?>&tgl_akhir=<?=urlencode($tgl_akhir)?>" class="btn bo">← Kembali</a>
+</div>
+<div class="wrap">
+  <div class="rpt-hdr">
+    <div class="rpt-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Laporan Pembelian — TehKitta</div>
+    <div class="rpt-period">Periode: <?= date('d M Y',strtotime($tgl_awal)) ?> s/d <?= date('d M Y',strtotime($tgl_akhir)) ?> &nbsp;|&nbsp; Dicetak: <?= date('d M Y H:i') ?> WIB</div>
+  </div>
+  <div class="rpt-body">
+    <div class="sum-row">
+      <div class="sum-box"><div class="sum-val"><?= number_format($summary['total_trx']) ?></div><div class="sum-lbl">Total Pembelian</div></div>
+      <div class="sum-box"><div class="sum-val">Rp <?= number_format($summary['total_beli']??0,0,',','.') ?></div><div class="sum-lbl">Total Pengeluaran</div></div>
+      <div class="sum-box"><div class="sum-val">Rp <?= $summary['total_trx']>0?number_format(($summary['total_beli']??0)/$summary['total_trx'],0,',','.'):0 ?></div><div class="sum-lbl">Rata-rata / Pembelian</div></div>
+    </div>
+    <table>
+      <thead><tr><th>#</th><th>No. Pembelian</th><th>Tanggal</th><th>Supplier</th><th>Petugas</th><th>Total</th></tr></thead>
+      <tbody>
+        <?php $no=1; $total=0; while($d=mysqli_fetch_assoc($rows)): $total+=$d['sub_total']; ?>
+        <tr>
+          <td><?= $no++ ?></td>
+          <td><?= htmlspecialchars($d['id_pembelian']) ?></td>
+          <td><?= date('d/m/Y',strtotime($d['tanggal'])) ?></td>
+          <td><?= htmlspecialchars($d['nama_supplier']??'-') ?></td>
+          <td><?= htmlspecialchars($d['nama_petugas']??'-') ?></td>
+          <td>Rp <?= number_format($d['sub_total'],0,',','.') ?></td>
+        </tr>
+        <?php endwhile; ?>
+      </tbody>
+      <tfoot><tr class="tfoot-row"><td colspan="5" style="text-align:right;padding:12px;">TOTAL KESELURUHAN</td><td>Rp <?= number_format($total,0,',','.') ?></td></tr></tfoot>
+    </table>
+    <div class="footer-note">Laporan ini digenerate otomatis oleh Sistem TehKitta &nbsp;•&nbsp; <?= date('d F Y H:i:s') ?> WIB</div>
+  </div>
+</div>
+</body></html>
