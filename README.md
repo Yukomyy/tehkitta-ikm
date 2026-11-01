@@ -174,6 +174,12 @@ tehkitta-ikm/
 
 ---
 
+## System Screenshots
+
+*(Drag & drop 2–3 foto screenshot dari file CV Anda ke baris ini melalui editor GitHub)*
+
+---
+
 ## Lisensi dan Hak Cipta
 
 Hak Cipta (c) PT Rafika Mandiri. Seluruh hak cipta dilindungi undang-undang.
